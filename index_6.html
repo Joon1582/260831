@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGNAL 인사이트 리포트</title>
+<meta name="description" content="고객·상담·계약·매물·광고·계약서 원본까지 6종 데이터를 정제해 도출한 17개 분양 영업 인사이트">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f5f6fa;
+    --surface:#ffffff;
+    --surface-2:#f0f2f7;
+    --surface-3:#e9ebf2;
+    --ink:#13151c;
+    --ink-secondary:#4a4e5a;
+    --muted:#868b98;
+    --faint:#a7abb6;
+    --border:rgba(16,20,35,0.09);
+    --border-strong:rgba(16,20,35,0.15);
+    --accent:#3452db;
+    --accent-ink:#28399f;
+    --accent-soft:#ecf0fd;
+    --good:#0f8a2f;
+    --good-soft:#e9f7ec;
+    --critical:#c23a3a;
+    --critical-soft:#fcecec;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#c98500;
+    --s5:#e87ba4; --s6:#1a7a1a; --s7:#4a3aa7; --s8:#e34948;
+    --shadow: 0 1px 2px rgba(16,20,35,0.05), 0 6px 20px -10px rgba(16,20,35,0.12);
+    --shadow-hover: 0 4px 10px rgba(16,20,35,0.06), 0 16px 32px -12px rgba(16,20,35,0.18);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 560px at 6% -8%, rgba(52,82,219,0.07), transparent 60%),
+      radial-gradient(900px 500px at 96% 6%, rgba(27,175,122,0.06), transparent 60%),
+      radial-gradient(800px 480px at 50% 100%, rgba(184,117,12,0.05), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  h1,h2,h3,h4{margin:0; text-wrap:balance; font-family:"IBM Plex Sans KR",system-ui,sans-serif;}
+  .num{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+  p{margin:0; line-height:1.68;}
+  b{font-weight:600;}
+  ::selection{background:var(--accent); color:#fff;}
+  a{color:inherit; text-decoration:none;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important; scroll-behavior:auto !important;} }
+
+  /* ============ per-section accent theming ============ */
+  .page[data-accent="indigo"]{ --sec:#3452db; --sec-soft:#ecf0fd; --sec-ink:#28399f; }
+  .page[data-accent="blue"]{ --sec:#2a78d6; --sec-soft:#e9f2fc; --sec-ink:#1f5aa8; }
+  .page[data-accent="teal"]{ --sec:#0f9d68; --sec-soft:#e6f7ef; --sec-ink:#0b7a51; }
+  .page[data-accent="violet"]{ --sec:#5c4bc4; --sec-soft:#efedfc; --sec-ink:#453590; }
+  .page[data-accent="amber"]{ --sec:#b9750c; --sec-soft:#fbf0dd; --sec-ink:#8f5b09; }
+  .page[data-accent="slate"]{ --sec:#55596b; --sec-soft:#eef0f4; --sec-ink:#3f4354; }
+  .dot-indigo{background:#3452db;} .dot-blue{background:#2a78d6;} .dot-teal{background:#0f9d68;}
+  .dot-violet{background:#5c4bc4;} .dot-amber{background:#b9750c;} .dot-slate{background:#868b98;}
+
+  /* ============ layout shell ============ */
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{
+    width:250px; flex:none; background:rgba(255,255,255,0.72); backdrop-filter:blur(10px);
+    border-right:1px solid var(--border);
+    position:sticky; top:0; height:100vh; overflow-y:auto; padding:26px 16px;
+    display:flex; flex-direction:column;
+  }
+  .brand{padding:4px 10px 22px; border-bottom:1px solid var(--border); margin-bottom:16px;}
+  .brand .mark{font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:19px; letter-spacing:.01em; color:var(--ink);}
+  .brand .mark span{color:var(--accent);}
+  .brand .tagline{font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.5;}
+
+  nav.toc{display:flex; flex-direction:column; gap:2px;}
+  nav.toc .navlabel{font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); padding:10px 10px 6px;}
+  nav.toc a{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px;
+    font-size:13.5px; color:var(--ink-secondary); font-weight:500; border-left:2.5px solid transparent;
+    transition:background .15s, color .15s;
+  }
+  nav.toc a .dot{width:7px; height:7px; border-radius:50%; flex:none; transition:transform .2s;}
+  nav.toc a:hover{background:var(--surface-2); color:var(--ink);}
+  nav.toc a.active{background:var(--surface); color:var(--ink); font-weight:700; box-shadow:var(--shadow);}
+  nav.toc a.active .dot{transform:scale(1.3);}
+
+  .sidebar-foot{margin-top:auto; padding-top:18px; border-top:1px solid var(--border);}
+  .sidebar-foot .status{font-size:11px; color:var(--muted); line-height:1.7;}
+  .sidebar-foot .status b{color:var(--good); font-weight:700;}
+
+  .main{flex:1; min-width:0;}
+  .content{max-width:1080px; margin:0 auto; padding:44px 40px 90px;}
+  @media (max-width:640px){ .content{padding:32px 18px 70px;} }
+
+  .page{display:none;}
+  .page.active{display:block;}
+  .page.enter{opacity:0; transform:translateY(6px);}
+  .page.enter-active{opacity:1; transform:none; transition:opacity .32s ease, transform .32s ease;}
+
+  /* ============ page header ============ */
+  .page-head{margin-bottom:30px;}
+  .page-eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--sec, var(--accent));}
+  .page-head h1{font-size:26px; font-weight:700; margin-top:8px;}
+  .page-head .desc{font-size:14px; color:var(--ink-secondary); margin-top:8px; max-width:640px;}
+
+  /* ============ KPI row (summary) ============ */
+  .kpi-row{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:34px;}
+  @media (max-width:820px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+  .kpi{background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--kc); border-radius:12px; padding:18px 18px; box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease;}
+  .kpi:hover{transform:translateY(-3px); box-shadow:var(--shadow-hover);}
+  .kpi .v{font-family:"IBM Plex Mono",monospace; font-size:25px; font-weight:700; color:var(--kc);}
+  .kpi .v small{font-size:13px; font-weight:600; color:var(--muted);}
+  .kpi .l{font-size:11.8px; color:var(--muted); margin-top:5px; line-height:1.45;}
+
+  /* ============ key findings list (summary) ============ */
+  .findings{display:flex; flex-direction:column; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface); box-shadow:var(--shadow);}
+  .finding-row{display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s;}
+  .finding-row:last-child{border-bottom:none;}
+  .finding-row:hover{background:var(--surface-2);}
+  .finding-row .fdot{width:9px; height:9px; border-radius:50%; flex:none;}
+  .finding-row .fstat{font-family:"IBM Plex Mono",monospace; font-size:17px; font-weight:700; width:118px; flex:none;}
+  .finding-row .ftxt{font-size:13.8px; color:var(--ink); flex:1; line-height:1.5;}
+  .finding-row .ftag{font-size:10.5px; font-weight:600; color:var(--muted); background:var(--surface-3); padding:4px 9px; border-radius:100px; flex:none; white-space:nowrap;}
+
+  /* ============ insight row ============ */
+  .insight-row{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:20px; overflow:hidden; transition:transform .2s ease, box-shadow .2s ease;}
+  .insight-row:hover{transform:translateY(-2px); box-shadow:var(--shadow-hover);}
+  .insight-row .ihead{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:20px 24px 14px;}
+  .ihead .tag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.04em; color:var(--sec-ink); background:var(--sec-soft); padding:4px 10px; border-radius:100px; margin-bottom:9px;}
+  .ihead h3{font-size:16.5px; font-weight:700; line-height:1.4; max-width:560px;}
+  .ihead .metric{text-align:right; flex:none;}
+  .ihead .metric .mv{font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:700; color:var(--sec);}
+  .ihead .metric .ml{font-size:10.8px; color:var(--muted); margin-top:2px;}
+
+  .ibody{display:grid; grid-template-columns:1.05fr 1fr; gap:0; border-top:1px solid var(--border);}
+  @media (max-width:800px){.ibody{grid-template-columns:1fr;}}
+  .itext{padding:18px 24px 22px; display:flex; flex-direction:column; gap:14px; border-right:1px solid var(--border); justify-content:center;}
+  @media (max-width:800px){.itext{border-right:none; border-bottom:1px solid var(--border);}}
+  .itext .finding-txt{font-size:14px; color:var(--ink-secondary); line-height:1.72;}
+  .itext .finding-txt b{color:var(--ink); font-weight:700;}
+  .action-box{background:var(--good-soft); border-left:3px solid var(--good); border-radius:0 8px 8px 0; padding:12px 14px;}
+  .action-box .al{font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--good); margin-bottom:4px;}
+  .action-box .at{font-size:13.2px; color:var(--ink); line-height:1.6;}
+  .ichart{padding:20px 24px; background:var(--surface-2); display:flex; flex-direction:column; justify-content:center; gap:10px;}
+  .ichart .ctitle{font-size:11px; font-weight:700; color:var(--ink-secondary); text-transform:uppercase; letter-spacing:.04em;}
+  .ichart .csrc{font-size:10px; color:var(--faint); font-family:"IBM Plex Mono",monospace; margin-top:-6px;}
+
+  .split2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .split2 .sub-h{font-size:10.5px; font-weight:700; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:.03em;}
+
+  /* ============ stat tile ============ */
+  .stat-hero{display:flex; flex-direction:column; align-items:flex-start; gap:10px;}
+  .stat-hero .big{font-family:"IBM Plex Mono",monospace; font-size:44px; font-weight:700; color:var(--sec); line-height:1;}
+  .stat-hero .sub{font-size:12px; color:var(--ink-secondary); line-height:1.5;}
+  .stat-hero .compare{font-size:12px; color:var(--ink-secondary); line-height:1.5; display:flex; gap:16px; margin-top:2px;}
+  .stat-hero .compare .cv{display:block; font-family:"IBM Plex Mono",monospace; font-size:16px; font-weight:700; color:var(--ink);}
+  .seg-bar{width:100%; height:14px; border-radius:4px; overflow:hidden; display:flex; background:var(--border);}
+  .seg-bar .seg{height:100%; width:0%; transition:width 1s cubic-bezier(.16,1,.3,1);}
+  .seg-legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:2px;}
+  .seg-legend .li{display:flex; align-items:center; gap:5px; font-size:10.8px; color:var(--ink-secondary);}
+  .seg-legend .sw{width:9px; height:9px; border-radius:3px; flex:none;}
+
+  /* ============ generic bar chart ============ */
+  .bars{display:flex; flex-direction:column; gap:8px;}
+  .bar-row{display:grid; grid-template-columns:92px 1fr 74px; align-items:center; gap:10px;}
+  .bar-row .lbl{font-size:12px; color:var(--ink-secondary); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bar-track{position:relative; height:14px; background:var(--surface-3); border-radius:4px;}
+  .bar-fill{position:absolute; left:0; top:0; height:100%; border-radius:4px; width:0%; transition:width .9s cubic-bezier(.16,1,.3,1);}
+  .bar-row .val{font-family:"IBM Plex Mono",monospace; font-size:12px; text-align:right; color:var(--ink); white-space:nowrap;}
+  .bar-row .val .badge{display:inline-block; margin-left:6px; font-size:10px; padding:1px 6px; border-radius:100px; font-weight:600;}
+  .badge.up{background:var(--critical-soft); color:var(--critical);}
+  .badge.down{background:var(--good-soft); color:var(--good);}
+  .bar-divider{height:1px; background:var(--border-strong); margin:2px 0 4px;}
+
+  .dbar-group{margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);}
+  .dbar-group:last-child{margin:0; padding:0; border:none;}
+  .dbar-title{display:flex; justify-content:space-between; margin-bottom:6px;}
+  .dbar-title .ch{font-size:12px; font-weight:700; color:var(--ink);}
+  .dbar-title .rate{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-secondary);}
+  .dbar-row{display:grid; grid-template-columns:58px 1fr 48px; gap:8px; align-items:center; margin-bottom:4px;}
+  .dbar-row .lbl{font-size:10.5px; color:var(--muted); text-align:right;}
+  .dbar-track{position:relative; height:10px; background:var(--surface-3); border-radius:3px;}
+  .dbar-fill{position:absolute; left:0; top:0; height:100%; border-radius:3px; width:0%; transition:width .9s cubic-bezier(.16,1,.3,1);}
+  .dbar-row .dval{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink); text-align:right;}
+  .dlegend{display:flex; gap:14px; margin-bottom:10px;}
+  .dlegend .li{display:flex; align-items:center; gap:5px; font-size:10.8px; color:var(--ink-secondary);}
+  .dlegend .sw{width:9px; height:9px; border-radius:3px;}
+
+  .funnel{display:flex; flex-direction:column; gap:8px;}
+  .funnel-row{display:grid; grid-template-columns:104px 1fr 96px; align-items:center; gap:12px;}
+  .funnel-track{height:30px; background:var(--surface-3); border-radius:7px; position:relative;}
+  .funnel-fill{height:100%; border-radius:7px; display:flex; align-items:center; justify-content:flex-end; padding-right:10px; width:0%; transition:width 1s cubic-bezier(.16,1,.3,1);}
+  .funnel-fill span{font-family:"IBM Plex Mono",monospace; font-weight:700; color:#fff; font-size:12.5px; opacity:0; transition:opacity .3s ease .5s;}
+  .funnel-fill.animated span{opacity:1;}
+  .funnel-row .stage{font-size:12px; color:var(--ink-secondary); text-align:right; font-weight:600;}
+  .funnel-row .drop{font-size:10.8px; color:var(--muted); font-family:"IBM Plex Mono",monospace;}
+
+  /* ============ data notes (appendix) page ============ */
+  .quality-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width:820px){.quality-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.quality-grid{grid-template-columns:1fr;}}
+  .qc{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease;}
+  .qc:hover{transform:translateY(-3px); box-shadow:var(--shadow-hover);}
+  .qc .file{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--sec-ink); font-weight:700; margin-bottom:8px;}
+  .qc ul{margin:0; padding-left:16px; font-size:12px; color:var(--ink-secondary); line-height:1.75;}
+  .qc ul li b{color:var(--ink);}
+
+  footer{padding:34px 40px 60px; max-width:1080px; margin:0 auto;}
+  footer p{font-size:11.8px; color:var(--muted); line-height:1.8;}
+  footer .roadmap{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;}
+  footer .rm{font-size:11px; padding:5px 11px; border-radius:100px; border:1px dashed var(--border-strong); color:var(--ink-secondary);}
+  footer .rm.done{border-style:solid; color:var(--good); border-color:rgba(15,138,47,0.3); background:var(--good-soft);}
+
+  /* reveal-on-scroll */
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease;}
+  .reveal.in{opacity:1; transform:none;}
+
+  @media (max-width:880px){
+    .shell{flex-direction:column;}
+    .sidebar{position:sticky; top:0; width:100%; height:auto; flex-direction:row; align-items:center; padding:12px 14px; overflow-x:auto; gap:14px; z-index:10;}
+    .brand{border:none; padding:0; margin:0; flex:none;}
+    .brand .tagline{display:none;}
+    nav.toc{flex-direction:row; gap:4px;}
+    nav.toc .navlabel{display:none;}
+    nav.toc a{white-space:nowrap; border-left:none;}
+    .sidebar-foot{display:none;}
+  }
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">SIGNAL<span>.</span></div>
+      <div class="tagline">고객 여정 인사이트 리포트<br>customers · consultations · contracts · units · ad_spend · docs</div>
+    </div>
+    <nav class="toc" id="toc">
+      <div class="navlabel">목차</div>
+      <a href="#summary" data-page="summary" data-color="indigo" class="active"><span class="dot dot-indigo"></span>요약</a>
+      <a href="#channel" data-page="channel" data-color="blue"><span class="dot dot-blue"></span>채널 · 마케팅</a>
+      <a href="#inventory" data-page="inventory" data-color="teal"><span class="dot dot-teal"></span>매물 · 재고</a>
+      <a href="#segment" data-page="segment" data-color="violet"><span class="dot dot-violet"></span>고객 세그먼트</a>
+      <a href="#sales" data-page="sales" data-color="amber"><span class="dot dot-amber"></span>영업 성과</a>
+      <a href="#notes" data-page="notes" data-color="slate"><span class="dot dot-slate"></span>데이터 노트</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="status"><b>●</b> 정제 완료 · 인사이트 17건<br>Supabase 적재 · Vercel 배포 예정</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="content">
+
+      <!-- ============ SUMMARY ============ -->
+      <section class="page active" id="page-summary" data-accent="indigo">
+        <div class="page-head">
+          <div class="page-eyebrow">Executive Summary</div>
+          <h1>답부터 — 고객 600명, 어디서 놓치고 있는가</h1>
+          <p class="desc">6종 원본 데이터(CSV 5개 + 계약서·건축물대장 문서 13건)를 정제해 하나의 고객 여정으로 연결했습니다. 아래가 데이터가 가리키는 핵심 지점입니다.</p>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi" style="--kc:var(--s1)"><div class="v" data-count="600" data-fmt="int">0</div><div class="l">고유 고객</div></div>
+          <div class="kpi" style="--kc:var(--s3)"><div class="v" data-count="2500" data-fmt="int">0</div><div class="l">상담 이력</div></div>
+          <div class="kpi" style="--kc:#b9750c"><div class="v" data-count="350" data-fmt="int">0</div><div class="l">계약 · 완료 218</div></div>
+          <div class="kpi" style="--kc:var(--s7)"><div class="v" data-count="220" data-fmt="int">0</div><div class="l">매물 세대</div></div>
+          <div class="kpi" style="--kc:var(--accent)"><div class="v"><span data-count="32.5" data-fmt="pct1">0</span></div><div class="l">고객→완료계약 전환율</div></div>
+        </div>
+
+        <div class="findings" id="findings-list"></div>
+      </section>
+
+      <!-- ============ CHANNEL ============ -->
+      <section class="page" id="page-channel" data-accent="blue">
+        <div class="page-head">
+          <div class="page-eyebrow">Channel &amp; Marketing</div>
+          <h1>채널 · 마케팅</h1>
+          <p class="desc">유입경로, 상담 채널, 광고 집행, 상담사 성과 — 리드가 계약으로 바뀌는 길목의 효율을 봅니다.</p>
+        </div>
+        <div id="insights-channel"></div>
+      </section>
+
+      <!-- ============ INVENTORY ============ -->
+      <section class="page" id="page-inventory" data-accent="teal">
+        <div class="page-head">
+          <div class="page-eyebrow">Inventory</div>
+          <h1>매물 · 재고</h1>
+          <p class="desc">220세대 재고와 고객 수요가 타입·향·뷰별로 어떻게 어긋나는지, 그리고 가격 데이터 자체의 정합성을 실제 계약서 원본까지 대조해 봅니다.</p>
+        </div>
+        <div id="insights-inventory"></div>
+      </section>
+
+      <!-- ============ SEGMENT ============ -->
+      <section class="page" id="page-segment" data-accent="violet">
+        <div class="page-head">
+          <div class="page-eyebrow">Customer Segments</div>
+          <h1>고객 세그먼트</h1>
+          <p class="desc">지역·등급·예산 기준으로 고객을 나누면, 상담 리소스를 어디에 더 써야 하는지가 드러납니다.</p>
+        </div>
+        <div id="insights-segment"></div>
+      </section>
+
+      <!-- ============ SALES ============ -->
+      <section class="page" id="page-sales" data-accent="amber">
+        <div class="page-head">
+          <div class="page-eyebrow">Sales Performance</div>
+          <h1>영업 성과</h1>
+          <p class="desc">영업사원별 성과와 계약 구조(대출비율)를 통해 실행 조직과 재무 리스크를 함께 봅니다.</p>
+        </div>
+        <div id="insights-sales"></div>
+      </section>
+
+      <!-- ============ NOTES ============ -->
+      <section class="page" id="page-notes" data-accent="slate">
+        <div class="page-head">
+          <div class="page-eyebrow">Data Notes</div>
+          <h1>데이터 노트</h1>
+          <p class="desc">6종 원본 파일을 정제·대조한 방식입니다. 표기 불일치를 통일하고, 결측·이상치는 계산에서 제외하거나 별도로 표시했으며, PDF 원본 문서는 직접 판독해 수치를 추출했습니다.</p>
+        </div>
+        <div class="quality-grid">
+          <div class="qc"><div class="file">customers_raw.csv · 648→600행</div>
+            <ul>
+              <li>중복 고객 <b>48건</b> 제거 (customer_id 기준)</li>
+              <li>등급 표기 <b>9종→5종</b>, 지역 표기 <b>19종→17종</b> 통일</li>
+              <li>예산 이상치(-1, 999999) <b>129건</b> 결측 처리</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">consultations_raw.csv · 2,500행</div>
+            <ul>
+              <li>상담채널 표기 <b>8종→4종</b> 통일</li>
+              <li>날짜 3개 포맷 ISO로 통일</li>
+              <li>상담시간 이상치 <b>718건(28.7%)</b> 결측 플래그</li>
+              <li>고객·매물 ID 불일치 레코드 <b>154건(6.2%)</b> 별도 표시</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">contracts_raw.csv · 350행</div>
+            <ul>
+              <li>상태 표기 <b>6종→3종</b> 통일</li>
+              <li>날짜 4개 포맷 ISO로 통일</li>
+              <li>대출금액 결측 <b>41건(11.7%)</b> 플래그</li>
+              <li>분양가 0원 <b>4건</b> 결측 처리</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">units.csv · 220행</div>
+            <ul>
+              <li>결측·이상치 없음</li>
+              <li>동/호/타입/가격/상태 기준 테이블로 사용</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">ad_spend.csv · 144행</div>
+            <ul>
+              <li>24개월 × 6채널, 결측·이상치 없음</li>
+              <li>수치형 캐스팅만 수행</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">docs/*.pdf · 13개 문서</div>
+            <ul>
+              <li>분양계약서 원본 샘플 <b>12건</b> — pdfplumber로 계약자·매물·분양대금 판독</li>
+              <li>건축물대장 발췌 <b>1건</b> — 동/세대수 구조 판독</li>
+              <li>추출 수치를 CSV 정형 데이터와 교차 검증 (02 매물·재고 참고)</li>
+            </ul>
+          </div>
+          <div class="qc"><div class="file">교차 검증 결과</div>
+            <ul>
+              <li>contracts·units의 unit_id 기준 가격 스케일 불일치 발견, PDF 원본으로 재확인</li>
+              <li>건축물대장(10개동)과 units.csv(3개동) 커버리지 불일치 발견</li>
+              <li>모든 전환율은 <b>customer_id</b> 고유 기준으로 집계</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer>
+      <p>본 페이지는 배포 전 인사이트 검토용입니다. 원본 데이터는 100% 합성(가상) 데이터이며 실제 고객·계약과 무관합니다.</p>
+      <div class="roadmap">
+        <span class="rm done">✓ 데이터 정제</span>
+        <span class="rm done">✓ 문서 판독</span>
+        <span class="rm done">✓ 인사이트 도출</span>
+        <span class="rm">Supabase 테이블 적재</span>
+        <span class="rm">GitHub → Vercel 배포</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------------- nav + page transitions ----------------
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+
+  function playPage(pageEl){
+    // animate bars/segments/funnels within this page
+    var fills = pageEl.querySelectorAll('.bar-fill, .dbar-fill, .seg, .funnel-fill');
+    fills.forEach(function(el){ el.style.width = '0%'; });
+    var counts = pageEl.querySelectorAll('[data-count]');
+    counts.forEach(function(el){ el.textContent = formatCount(0, el.dataset.fmt); });
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        fills.forEach(function(el){
+          var w = el.dataset.w || el.getAttribute('data-target-width');
+          if(w) el.style.width = w;
+          if(el.classList.contains('funnel-fill')) el.classList.add('animated');
+        });
+        counts.forEach(function(el){ animateCount(el); });
+      });
+    });
+    // reveal cards with stagger
+    var cards = pageEl.querySelectorAll('.reveal');
+    cards.forEach(function(el,i){
+      el.classList.remove('in');
+      void el.offsetWidth;
+      el.style.transitionDelay = reduceMotion ? '0ms' : (Math.min(i,8)*55)+'ms';
+      requestAnimationFrame(function(){ el.classList.add('in'); });
+    });
+  }
+
+  function setPage(id){
+    if(!document.getElementById('page-'+id)) id = 'summary';
+    pages.forEach(function(p){ p.classList.toggle('active', p.id === 'page-'+id); });
+    links.forEach(function(a){ a.classList.toggle('active', a.dataset.page === id); });
+    window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+    var active = document.getElementById('page-'+id);
+    if(reduceMotion){
+      active.querySelectorAll('.bar-fill, .dbar-fill, .seg, .funnel-fill').forEach(function(el){
+        var w = el.dataset.w; if(w) el.style.width = w;
+        if(el.classList.contains('funnel-fill')) el.classList.add('animated');
+      });
+      active.querySelectorAll('[data-count]').forEach(function(el){ el.textContent = formatCount(parseFloat(el.dataset.count), el.dataset.fmt); });
+      active.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+    } else {
+      playPage(active);
+    }
+  }
+  links.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      history.replaceState(null,'','#'+a.dataset.page);
+      setPage(a.dataset.page);
+    });
+  });
+
+  // ---------------- count-up ----------------
+  function formatCount(v, fmt){
+    if(fmt==='int') return Math.round(v).toLocaleString();
+    if(fmt==='pct1') return v.toFixed(1)+'%';
+    if(fmt==='pct0') return Math.round(v)+'%';
+    if(fmt==='dec1') return v.toFixed(1);
+    return String(Math.round(v));
+  }
+  function animateCount(el){
+    var target = parseFloat(el.dataset.count);
+    var fmt = el.dataset.fmt || 'int';
+    var dur = 900, start = null;
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min(1, (ts-start)/dur);
+      var eased = 1 - Math.pow(1-p, 3);
+      el.textContent = formatCount(target*eased, fmt);
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ================= chart renderers =================
+  function bar(items, opts){
+    opts = opts||{};
+    var max = opts.max || Math.max.apply(null, items.map(function(d){return d.value;}));
+    return '<div class="bars">' + items.map(function(d){
+      if(d.divider) return '<div class="bar-divider"></div>';
+      var pct = Math.max(3, d.value/max*100);
+      var badge = d.badge ? '<span class="badge '+d.badge.dir+'">'+d.badge.text+'</span>' : '';
+      return '<div class="bar-row" title="'+(d.title||d.label)+'">' +
+        '<div class="lbl">'+d.label+'</div>' +
+        '<div class="bar-track"><div class="bar-fill" data-w="'+pct+'%" style="background:'+d.color+'"></div></div>' +
+        '<div class="val">'+d.display+badge+'</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function dbars(groups){
+    return '<div class="dlegend">' +
+      '<span class="li"><span class="sw" style="background:var(--s1)"></span>'+groups.legendA+'</span>' +
+      '<span class="li"><span class="sw" style="background:var(--s2)"></span>'+groups.legendB+'</span>' +
+    '</div>' +
+    groups.items.map(function(d){
+      var max = groups.max;
+      var aPct = Math.max(4, d.a/max*100), bPct = Math.max(2, d.b/max*100);
+      return '<div class="dbar-group">' +
+        '<div class="dbar-title"><span class="ch">'+d.l+'</span><span class="rate">'+d.rateLabel+'</span></div>' +
+        '<div class="dbar-row"><div class="lbl">'+groups.shortA+'</div><div class="dbar-track"><div class="dbar-fill" data-w="'+aPct+'%" style="background:var(--s1)"></div></div><div class="dval">'+d.a.toLocaleString()+'</div></div>' +
+        '<div class="dbar-row"><div class="lbl">'+groups.shortB+'</div><div class="dbar-track"><div class="dbar-fill" data-w="'+bPct+'%" style="background:var(--s2)"></div></div><div class="dval">'+d.b.toLocaleString()+'</div></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function segBar(segs){
+    var html = '<div class="seg-bar">' + segs.map(function(s){ return '<div class="seg" data-w="'+s.pct+'%" style="background:'+s.color+'"></div>'; }).join('') + '</div>';
+    html += '<div class="seg-legend">' + segs.map(function(s){ return '<span class="li"><span class="sw" style="background:'+s.color+'"></span>'+s.label+'</span>'; }).join('') + '</div>';
+    return html;
+  }
+
+  function funnel(data){
+    var max = data[0].v;
+    var colors = ['var(--s1)','var(--s1)','var(--s1)','var(--good)'];
+    return '<div class="funnel">' + data.map(function(d,i){
+      var pct = Math.max(16, d.v/max*100);
+      var drop = i===0 ? '' : '−'+(data[i-1].v-d.v).toLocaleString()+' ('+((d.v/data[i-1].v*100).toFixed(0))+'% 유지)';
+      return '<div class="funnel-row">' +
+        '<div class="stage">'+d.l+'</div>' +
+        '<div class="funnel-track"><div class="funnel-fill" data-w="'+pct+'%" style="background:'+colors[i]+'"><span>'+d.v.toLocaleString()+'</span></div></div>' +
+        '<div class="drop">'+drop+'</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  // ================= row template =================
+  function row(o){
+    return '<div class="insight-row reveal">' +
+      '<div class="ihead">' +
+        '<div><span class="tag">'+o.tag+'</span><h3>'+o.title+'</h3></div>' +
+        (o.metricVal ? '<div class="metric"><div class="mv">'+o.metricVal+'</div><div class="ml">'+o.metricLabel+'</div></div>' : '') +
+      '</div>' +
+      '<div class="ibody">' +
+        '<div class="itext">' +
+          '<div class="finding-txt">'+o.finding+'</div>' +
+          '<div class="action-box"><div class="al">제안</div><div class="at">'+o.action+'</div></div>' +
+        '</div>' +
+        '<div class="ichart">' +
+          '<div class="ctitle">'+o.chartTitle+'</div>' +
+          o.chartHtml +
+          '<div class="csrc">'+o.chartSrc+'</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ================= CHANNEL =================
+  var leadData = [
+    {l:'광고(네이버)', n:66, c:25, r:37.9},{l:'광고', n:55, c:20, r:36.4},
+    {l:'SNS', n:62, c:21, r:33.9},{l:'전화문의', n:54, c:18, r:33.3},
+    {l:'블로그', n:172, c:56, r:32.6},{l:'온라인전시관', n:78, c:23, r:29.5},
+    {l:'지인소개', n:59, c:17, r:28.8},{l:'방문', n:54, c:15, r:27.8}
+  ];
+  var leadChart = bar(leadData.map(function(d,i){
+    return {label:d.l, value:d.r, display:d.r.toFixed(1)+'%', title:d.l+' — '+d.c+'/'+d.n+'명',
+      color: i===0?'var(--good)':(i===leadData.length-1?'var(--critical)':'var(--s1)')};
+  }), {max:40});
+
+  var gapChart = dbars({
+    legendA:'계약희망 응답', legendB:'실제 완료계약', shortA:'희망', shortB:'완료', max:325,
+    items:[
+      {l:'방문', a:194, b:68, rateLabel:'실현율 35.1%'},
+      {l:'SNS', a:117, b:41, rateLabel:'실현율 35.0%'},
+      {l:'전화', a:325, b:104, rateLabel:'실현율 32.0%'},
+      {l:'온라인', a:96, b:24, rateLabel:'실현율 25.0%'}
+    ]
+  });
+
+  var cplData = [
+    {l:'블로그', v:23876, badge:{dir:'up', text:'▲8.4%'}},
+    {l:'지인추천이벤트', v:25676, badge:{dir:'down', text:'▼17.0%'}},
+    {l:'전시관행사', v:26448, badge:{dir:'up', text:'▲15.2%'}},
+    {l:'SNS광고', v:27174, badge:{dir:'down', text:'▼4.6%'}},
+    {l:'옥외광고', v:29085, badge:{dir:'down', text:'▼1.3%'}},
+    {l:'포털검색광고', v:33017, badge:{dir:'down', text:'▼13.8%'}}
+  ];
+  var cplChart = bar(cplData.map(function(d,i){
+    return {label:d.l, value:d.v, display:Math.round(d.v/1000)+'천원', badge:d.badge,
+      title:d.l+' — 리드당 '+d.v.toLocaleString()+'원', color:i===0?'var(--good)':'var(--s2)'};
+  }), {max:34000});
+
+  var consultantData = [
+    {l:'서주원', v:43.2},{l:'김서준', v:43.1},{l:'안시윤', v:43.1},{l:'임동현', v:42.4},
+    {l:'장은서', v:41.9},{l:'한지민', v:37.9},{l:'전동현', v:37.4},{l:'홍태윤', v:36.5},
+    {l:'조도윤', v:36.0},{l:'장채원', v:32.8}
+  ];
+  var consultantChart = bar(consultantData.map(function(d,i){
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color:i===0?'var(--good)':(i===consultantData.length-1?'var(--critical)':'var(--s1)')};
+  }), {max:44});
+
+  document.getElementById('insights-channel').innerHTML =
+    row({tag:'유입경로', title:'유입경로별 계약 전환율, 최대 10.1%p 격차', metricVal:'37.9% <span style="color:var(--muted); font-size:13px;">vs</span> 27.8%', metricLabel:'최고 vs 최저',
+      finding:'8개 유입경로 중 <b>"광고(네이버)"</b>가 66명 중 25명 계약해 전환율 <b>37.9%</b>로 1위, <b>"방문"</b>은 54명 중 15명, <b>27.8%</b>로 최저입니다. 표본이 가장 큰 <b>"블로그"</b>(172명)는 전환율 32.6%로 평범한 수준에 머뭅니다.',
+      action:'"광고(네이버)"·"광고" 채널의 리드 배정·예산 비중을 확대하고, "방문" 채널은 상담 스크립트와 후속 컨택 프로세스를 점검하세요. "블로그"는 물량 대비 전환이 낮으므로 리드 스코어링으로 상담 우선순위를 재조정하세요.',
+      chartTitle:'유입경로별 계약 전환율', chartSrc:'customers × contracts · lead_source 기준', chartHtml:leadChart}) +
+    row({tag:'상담 실현율', title:'온라인 상담 "계약희망"의 75%는 계약으로 안 이어짐', metricVal:'25.0%', metricLabel:'온라인 채널 실현율(최저)',
+      finding:'상담에서 <b>"계약희망"</b>으로 응답한 고객이 실제 완료 계약까지 간 비율은 방문 35.1%, SNS 35.0%, 전화 32.0%인데 <b>온라인은 25.0%</b>(96명 중 24명)로 가장 낮습니다. 온라인에서의 "계약희망"은 다른 채널보다 신뢰도가 낮은 신호입니다.',
+      action:'온라인 상담의 "계약희망" 태그를 파이프라인 점수에 그대로 반영하지 말고 가중치를 낮추세요. 온라인 상담 후 48시간 내 전화·방문 후속 컨택을 의무화하는 프로세스를 추가하세요.',
+      chartTitle:'"계약희망" → 실제 완료계약 실현율', chartSrc:'consultations × contracts · channel 기준', chartHtml:gapChart}) +
+    row({tag:'광고 효율', title:'포털검색광고는 가장 비싸지만 빠르게 개선 중', metricVal:'33천원', metricLabel:'포털검색광고 CPL(최고)',
+      finding:'리드당 비용(CPL)은 블로그가 23.9천원으로 가장 효율적이고 포털검색광고가 33.0천원으로 가장 비쌉니다. 다만 포털검색광고는 2024→2025년 CPL이 <b>13.8% 개선</b>된 반면, <b>전시관행사는 오히려 15.2% 악화</b>됐습니다.',
+      action:'전시관행사 채널의 예산 집행 방식을 재검토하세요(행사 구성·타겟팅 점검). 포털검색광고는 개선 추세이므로 현재 전략을 유지하며 예산을 점진적으로 확대해도 좋습니다.',
+      chartTitle:'채널별 리드당 비용(CPL) · 24개월 평균, 전년比 추세', chartSrc:'ad_spend · channel × year 기준', chartHtml:cplChart}) +
+    row({tag:'상담사 성과', title:'상담사별 "계약희망" 응답률, 10.4%p 격차', metricVal:'43.2%', metricLabel:'서주원(1위) 응답률',
+      finding:'상담사 10명의 "계약희망" 응답률은 <b>서주원 43.2%</b>부터 <b>장채원 32.8%</b>까지 10.4%p 벌어집니다. 상위 5명(서주원·김서준·안시윤·임동현·장은서)은 모두 41% 이상으로 뚜렷하게 앞섭니다.',
+      action:'상위 상담사의 상담 스크립트·질문 흐름을 문서화해 하위 상담사 교육에 활용하세요. 장채원·조도윤 등 하위권은 1:1 코칭 대상으로 우선 배정하세요.',
+      chartTitle:'상담사별 "계약희망" 응답률', chartSrc:'consultations · consultant 기준', chartHtml:consultantChart});
+
+  // ================= INVENTORY =================
+  var demandData = [
+    {l:'102A', v:10.3, sub:'93명/9세대'},{l:'84A', v:9.1, sub:'100명/11세대'},
+    {l:'59B', v:8.0, sub:'88명/11세대'},{l:'59A', v:7.6, sub:'91명/12세대'},
+    {l:'114A', v:6.4, sub:'83명/13세대'},{l:'74A', v:6.4, sub:'77명/12세대'},
+    {l:'84B', v:5.7, sub:'68명/12세대'}
+  ];
+  var demandChart = bar(demandData.map(function(d,i){
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+':1', title:d.l+' — '+d.sub, color:i===0?'var(--critical)':(i===demandData.length-1?'var(--good)':'var(--s3)')};
+  }), {max:11});
+
+  var matchStat = '<div class="stat-hero"><div class="big">14.2<span style="font-size:22px;">%</span></div>' +
+    '<div class="sub">완료 계약 218건 중 관심 평형과 실제 계약 평형이 일치한 비율</div>' +
+    segBar([{pct:14.2, color:'var(--sec)', label:'일치 14.2%'}, {pct:85.8, color:'var(--surface-3)', label:'불일치 85.8%'}]) +
+    '</div>';
+
+  var directionData = [
+    {l:'남서향', v:55.6},{l:'서향', v:51.3},{l:'남동향', v:47.7},{l:'북향', v:47.6},{l:'남향', v:41.7},{l:'동향', v:37.5}
+  ];
+  var viewData = [
+    {l:'공원뷰', v:55.3},{l:'평범', v:52.5},{l:'단지내뷰', v:43.5},{l:'한강뷰', v:41.9},{l:'도로뷰', v:40.9}
+  ];
+  var dirViewChart = '<div class="split2">' +
+    '<div><div class="sub-h">향(方向)별 계약률</div>' + bar(directionData.map(function(d,i){return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color:i===0?'var(--good)':(i===directionData.length-1?'var(--critical)':'var(--s3)')};}), {max:60}) + '</div>' +
+    '<div><div class="sub-h">뷰(view)별 계약률</div>' + bar(viewData.map(function(d,i){return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color:i===0?'var(--good)':(i===viewData.length-1?'var(--critical)':'var(--s3)')};}), {max:60}) + '</div>' +
+  '</div>';
+
+  var priceStat = '<div class="stat-hero"><div class="big">10.6<span style="font-size:22px;">배</span></div>' +
+    '<div class="sub">동일 unit_id 기준, 매물 시세(units.price)가 실제 계약가(contracts.price)의 평균 10.6배 — 건별로 3.3배~30.4배까지 제각각입니다.</div></div>';
+
+  var docStat = '<div class="stat-hero"><div class="compare">' +
+    '<span><span class="cv" style="color:var(--sec)">249,118</span>PDF 원본 12건 평균 분양가(만원)</span>' +
+    '<span><span class="cv">233,657</span>units.csv 평균 시세(만원)</span>' +
+    '<span><span class="cv" style="color:var(--critical)">25,137</span>contracts.csv 평균가(만원)</span>' +
+  '</div><div class="sub">실제 계약서 원본 12건을 판독한 결과 분양가는 units.csv 시세와 거의 일치(오차 6.6%)합니다. contracts.csv의 가격만 약 <b>9.9배</b> 낮게 기록돼 있어, 이 필드가 손상됐다는 결론을 문서로 재확인했습니다.</div></div>';
+
+  var registryStat = '<div class="stat-hero"><div class="compare">' +
+    '<span><span class="cv" style="color:var(--sec)">10개동</span>건축물대장 명시 구성(101~110동)</span>' +
+    '<span><span class="cv" style="color:var(--critical)">3개동</span>units.csv 실제 구성(101~103동)</span>' +
+  '</div><div class="sub">대장 상 총 세대수(220세대)는 units.csv 합계와 정확히 일치하지만, 동별 세대수(22층×4세대×10개동=880세대)와는 맞지 않습니다. 일부 동만 분양 시스템에 반영됐을 가능성이 있습니다.</div></div>';
+
+  document.getElementById('insights-inventory').innerHTML =
+    row({tag:'재고 수급', title:'102A·84A·59B 타입, 재고 소진 임박', metricVal:'10.3 : 1', metricLabel:'102A 수요:공급(최고)',
+      finding:'<b>102A</b> 타입은 관심 고객 93명 대비 미계약 재고가 <b>9세대</b>뿐 — 수요:공급 <b>10.3:1</b>로 7개 타입 중 가장 타이트합니다. <b>84A(9.1:1), 59B(8.0:1)</b>도 여유가 적은 반면 <b>84B는 5.7:1</b>로 상대적으로 여유가 있습니다.',
+      action:'102A·84A·59B는 대기 고객 명단(웨이팅 리스트)을 운영하고 잔여세대 프리미엄을 검토하세요. 84B는 계약금 인하·사은품 등 프로모션으로 소진 속도를 끌어올리세요.',
+      chartTitle:'타입별 수요:공급 비율 (관심고객수 ÷ 미계약 세대수)', chartSrc:'customers × units · interest_type 기준', chartHtml:demandChart}) +
+    row({tag:'구매 전환', title:'관심 평형과 실제 계약 평형, 10명 중 1명만 일치', metricVal:'14.2%', metricLabel:'평형 일치율',
+      finding:'고객이 처음 관심을 보인 평형(interest_type)과 실제로 계약한 매물 타입이 일치하는 경우는 완료 계약 218건 중 <b>31건(14.2%)</b>뿐입니다. 대다수 고객은 상담 과정에서 다른 평형으로 옮겨갑니다.',
+      action:'신규 리드의 interest_type을 그대로 타겟 마케팅·재고 배정에 쓰지 말고, 상담 이력 기반의 실제 전환 패턴(예: 소형→중형 이동 경향)을 반영한 추천 로직을 마련하세요.',
+      chartTitle:'평형 일치 여부', chartSrc:'customers × contracts × units · unit_id 기준', chartHtml:matchStat}) +
+    row({tag:'입지 요인', title:'향·뷰에 따라 계약률 최대 18.1%p 차이', metricVal:'55.6%', metricLabel:'남서향 계약률(최고)',
+      finding:'방향별로는 <b>남서향 55.6%</b> vs <b>동향 37.5%</b>로 18.1%p 차이가 나고, 뷰별로는 <b>공원뷰 55.3%</b> vs <b>도로뷰 40.9%</b>로 14.4%p 차이가 납니다. 공원뷰는 평균가도 두 번째로 높은데 계약률까지 1위입니다.',
+      action:'동향·도로뷰 매물은 가격 조정이나 옵션 강화(방음창 등)를 검토하세요. 공원뷰는 수요가 검증됐으므로 잔여 세대에 프리미엄을 유지해도 무방합니다.',
+      chartTitle:'향 · 뷰별 계약률', chartSrc:'units · direction, view 기준', chartHtml:dirViewChart}) +
+    row({tag:'데이터 정합성', title:'계약가와 매물 시세, 같은 매물인데 스케일이 다름', metricVal:'3.3~30.4배', metricLabel:'건별 괴리 범위',
+      finding:'같은 unit_id를 기준으로 contracts.price와 units.price를 비교하면 평균 10.6배, 최소 3.3배에서 최대 30.4배까지 제각각으로 벌어집니다. 일정한 할인율이 아니라 두 필드가 서로 다른 기준으로 생성된 것으로 보입니다.',
+      action:'매출·평균가 등 금액 지표는 반드시 contracts.price(실 계약가) 기준으로 산출하세요. units.price는 초기 호가 참고용으로만 쓰고, 두 값을 함께 쓰는 계산(예: 할인율)은 배제하세요.',
+      chartTitle:'계약가 대비 매물 시세 배율', chartSrc:'contracts × units · unit_id 기준 조인', chartHtml:priceStat}) +
+    row({tag:'문서 대조', title:'실제 계약서 원본으로 가격 데이터 재검증', metricVal:'9.9배', metricLabel:'PDF 대비 contracts.csv 괴리',
+      finding:'docs 폴더의 분양계약서 원본 샘플 12건을 직접 판독(pdfplumber)해 분양가를 추출했습니다. 평균 249,118만원으로 units.csv 시세(233,657만원)와는 오차 6.6%에 불과하지만, contracts.csv 평균가(25,137만원)와는 9.9배 차이가 납니다. 두 가지 독립적인 방법(전체 조인 비교·원본 문서 대조)이 같은 결론을 가리킵니다.',
+      action:'contracts.price_10k_krw 필드는 재수집이 필요합니다. 가능하다면 분양계약서 원본을 OCR/문서 판독 파이프라인으로 재처리해 정확한 계약가를 다시 적재하세요.',
+      chartTitle:'계약서 원본 vs 정형 데이터 평균 분양가 비교', chartSrc:'docs/contract_sample_01~12.pdf 직접 판독', chartHtml:docStat}) +
+    row({tag:'문서 대조', title:'건축물대장 10개동 vs 매물 마스터 3개동', metricVal:'3 / 10', metricLabel:'시스템 반영 동 수',
+      finding:'건축물대장 발췌본에는 101~110동, 총 10개 동 구성이 명시돼 있지만 units.csv에는 101~103동, 3개 동(220세대)만 존재합니다. 대장의 총 세대수(220)는 units.csv와 일치해 우연이라기보단 일부 동만 분양 시스템에 등록된 상태로 보입니다.',
+      action:'시행사·분양팀에 104~110동의 분양 진행 여부를 확인하세요. 아직 미등록 매물이 있다면 Supabase 적재 전에 매물 마스터를 보완해 재고 파악 누락을 방지하세요.',
+      chartTitle:'건축물대장 vs 매물 마스터 커버리지', chartSrc:'docs/building_registry_sample.pdf 직접 판독', chartHtml:registryStat});
+
+  // ================= SEGMENT =================
+  var regionData = [
+    {l:'울산', v:47.1},{l:'제주', v:44.7},{l:'세종', v:41.4},{l:'대구', v:39.0},{l:'서울', v:36.0},
+    {divider:true},
+    {l:'강원', v:27.3},{l:'경남', v:27.0},{l:'경기', v:25.6},{l:'대전', v:25.0},{l:'경북', v:17.6}
+  ];
+  var regionChart = bar(regionData.map(function(d){
+    if(d.divider) return d;
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color: d.v>=36 ? 'var(--good)' : (d.v<=27.3 ? 'var(--critical)' : 'var(--s7)')};
+  }), {max:50});
+
+  var gradeData = [
+    {l:'신규', v:41.7},{l:'일반', v:32.7},{l:'VIP', v:29.7},{l:'관심고객', v:29.7},{l:'VVIP', v:27.3}
+  ];
+  var gradeChart = bar(gradeData.map(function(d,i){
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color:i===0?'var(--good)':(i===gradeData.length-1?'var(--critical)':'var(--s7)')};
+  }), {max:44});
+
+  var dormantChart = '<div class="stat-hero" style="gap:12px;">' +
+    segBar([{pct:40.3, color:'var(--critical)', label:'고예산 휴면 54명(40.3%)'},{pct:59.7, color:'var(--surface-3)', label:'일반 휴면 80명'}]) +
+    '<div class="sub">고예산 54명 중 <b style="color:var(--ink)">53명(98.1%)</b>은 과거 상담 이력 보유 — 신규 리드가 아닌, 이미 접촉했다가 방치된 고객입니다.</div></div>';
+
+  var mismatchData = [
+    {l:'114A', v:19.6},{l:'102A', v:25.0},{l:'84B', v:29.0},{l:'84A', v:29.3},{l:'74A', v:34.2},{l:'59B', v:39.0},{l:'59A', v:44.5}
+  ];
+  var mismatchChart = bar(mismatchData.map(function(d,i){
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', color:i===0?'var(--critical)':(i===mismatchData.length-1?'var(--good)':'var(--s7)')};
+  }), {max:50});
+
+  document.getElementById('insights-segment').innerHTML =
+    row({tag:'지역', title:'지역별 계약 전환율, 최대 2.7배 격차', metricVal:'47.1% <span style="color:var(--muted); font-size:13px;">vs</span> 17.6%', metricLabel:'울산 vs 경북',
+      finding:'17개 지역 중 <b>울산(47.1%)·제주(44.7%)·세종(41.4%)</b>이 상위권인 반면 <b>경북(17.6%)·대전(25.0%)·경기(25.6%)</b>는 하위권입니다. 최고와 최저 지역 간 전환율이 2.7배 차이 납니다.',
+      action:'경북·대전·경기 지역은 상담 스크립트나 매물 매칭 방식이 다른 지역과 맞는지 점검하세요. 울산·제주처럼 전환이 좋은 지역의 유입경로·상담 패턴을 분석해 확산하세요.',
+      chartTitle:'지역별 계약 전환율 (상위 5 · 하위 5)', chartSrc:'customers × contracts · region 기준', chartHtml:regionChart}) +
+    row({tag:'등급', title:'"신규" 고객이 "VIP"보다 전환율이 높은 역전 현상', metricVal:'41.7% <span style="color:var(--muted); font-size:13px;">vs</span> 29.7%', metricLabel:'신규 vs VIP',
+      finding:'등급별 전환율은 <b>신규 41.7%</b>가 가장 높고 <b>일반 32.7%</b>, <b>VIP·관심고객 29.7%</b>, <b>VVIP 27.3%</b> 순으로 오히려 낮아지는 역전 현상이 보입니다. 등급이 높을수록 눈높이가 높아 의사결정이 신중해지는 것으로 보입니다.',
+      action:'VIP·VVIP 등급에는 일반 상담 대신 전담 상담사·맞춤 옵션 제안 등 별도 트랙을 마련하세요. "신규" 고객의 빠른 의사결정 패턴을 분석해 초기 상담 스크립트에 반영하세요.',
+      chartTitle:'등급별 계약 전환율', chartSrc:'customers × contracts · grade 기준', chartHtml:gradeChart}) +
+    row({tag:'휴면 고객', title:'고예산 휴면 고객 54명, 이미 접촉했던 고객이 방치됨', metricVal:'525.7억', metricLabel:'54명 합계 잠재 예산',
+      finding:'휴면 고객 134명 중 예산이 전체 중앙값(7.1억) 이상인 고객이 <b>54명(40.3%)</b>. 평균 예산 9.7억원, 합계 잠재 예산 <b>525.7억원</b> 규모입니다.',
+      action:'이 54명을 VIP 재영업 리스트로 분리해 전담 상담사를 배정하세요. 과거 상담 메모를 근거로 이탈 사유를 태깅해 맞춤 오퍼로 재접촉하고, 신규 리드보다 우선순위를 높여 이번 달 아웃바운드에 포함하세요.',
+      chartTitle:'휴면 고객 134명 구성', chartSrc:'customers × consultations · status=휴면 기준', chartHtml:dormantChart}) +
+    row({tag:'자금 계획', title:'114A 관심고객, 신고 예산이 시세의 5분의 1', metricVal:'19.6%', metricLabel:'114A 예산/시세 비율(최저)',
+      finding:'평형별 중앙값 예산을 해당 평형 매물 시세와 비교하면 <b>114A는 19.6%</b>로 격차가 가장 큽니다. 84B(29.0%)·84A(29.3%)도 비슷하게 낮은 반면, 가장 작은 평형인 <b>59A는 44.5%</b>로 격차가 상대적으로 적습니다.',
+      action:'114A·84A·84B에 관심을 보인 고객에게는 상담 초기 단계에서 대출 한도·자금 계획 상담을 우선 제공해 눈높이를 조정하세요. 예산 필드 자체가 과소 신고됐을 가능성도 함께 점검하세요.',
+      chartTitle:'평형별 (신고 예산 중앙값 ÷ 매물 시세 중앙값)', chartSrc:'customers × units · interest_type 기준', chartHtml:mismatchChart});
+
+  // ================= SALES =================
+  var repData = [
+    {l:'송시우', v:79.3, cancel:17.2},{l:'송준서', v:71.2, cancel:13.5},{l:'권태윤', v:65.9, cancel:9.8},
+    {l:'황다은', v:65.0, cancel:5.0},{l:'이소율', v:57.1, cancel:10.2},{l:'신지호', v:56.2, cancel:12.5},
+    {l:'황주원', v:55.1, cancel:8.2},{l:'한채원', v:54.8, cancel:11.9}
+  ];
+  var repChart = bar(repData.map(function(d,i){
+    return {label:d.l, value:d.v, display:d.v.toFixed(1)+'%', title:d.l+' — 완료율 '+d.v+'%, 해지율 '+d.cancel+'%',
+      badge:{dir: d.cancel>=13?'up':'down', text:'해지 '+d.cancel.toFixed(1)+'%'},
+      color:'var(--s4)'};
+  }), {max:90});
+
+  var ltvChart = '<div class="stat-hero" style="gap:12px;">' +
+    '<div class="big">62.5<span style="font-size:22px;">%</span></div>' +
+    '<div class="sub">완료 계약(대출 정보 확인 192건) 중 LTV(대출/분양가) 75~85% 구간에 속하는 비율</div>' +
+    segBar([{pct:22.4, color:'var(--surface-3)', label:'75% 미만 22.4%'},{pct:62.5, color:'var(--s4)', label:'75~85% 62.5%'},{pct:15.1, color:'var(--critical)', label:'85% 초과 15.1%'}]) +
+  '</div>';
+
+  var funnelChart = funnel([
+    {l:'고유 고객', v:600},{l:'상담 이력 있음', v:592},{l:'"계약희망" 응답', v:472},{l:'완료 계약', v:195}
+  ]);
+
+  document.getElementById('insights-sales').innerHTML =
+    row({tag:'영업 조직', title:'계약 최다 성사자가 해지도 가장 많다', metricVal:'79.3%', metricLabel:'송시우 완료율(1위)',
+      finding:'완료율 1위 <b>송시우(79.3%)</b>는 해지율도 <b>17.2%로 8명 중 1위</b>입니다. 반면 <b>황다은</b>은 완료율 65.0%(2위권)이면서 해지율은 5.0%로 가장 낮아, 계약 안정성 측면에서는 가장 견고합니다.',
+      action:'완료 건수만이 아니라 "해지율을 감안한 순계약"을 성과 지표에 반영하세요. 송시우의 상담 방식 중 계약 성사 노하우는 벤치마킹하되, 계약 전 자금 확인 절차는 황다은 방식을 참고해 보완하세요.',
+      chartTitle:'영업사원별 계약완료율 (배지: 해지율)', chartSrc:'contracts · sales_rep 기준', chartHtml:repChart}) +
+    row({tag:'재무 리스크', title:'완료 계약의 62.5%가 대출비율 75~85%에 몰려있음', metricVal:'78.8%', metricLabel:'평균 LTV',
+      finding:'대출 정보가 있는 완료 계약 192건의 평균 대출비율(LTV)은 78.8%이며, <b>62.5%가 75~85% 구간에 집중</b>돼 있습니다. 특정 금리 구간을 넘으면 다수 고객이 동시에 상환 부담을 느낄 수 있는 구조입니다.',
+      action:'금리 변동 시나리오별 고객 영향(월 상환액 증가폭)을 시뮬레이션하고, 고정금리·금리캡 상품을 안내하는 별도 자금 상담 트랙을 마련하세요.',
+      chartTitle:'대출비율(LTV) 구간 분포', chartSrc:'contracts · loan_amount ÷ price 기준', chartHtml:ltvChart}) +
+    row({tag:'퍼널', title:'고객 600명 중 계약까지 가는 인원은 195명', metricVal:'32.5%', metricLabel:'전체 전환율',
+      finding:'고유 고객 600명 중 <b>592명(99%)</b>은 상담 이력이 있고, 그중 <b>472명(80%)</b>이 "계약희망"을 표시했지만 실제 <b>완료 계약은 195명(41%)</b>에 그칩니다. "계약희망" 이후 단계에서 가장 크게 이탈합니다(−277명).',
+      action:'"계약희망" 이후 단계(계약금 협의~서류 확정)의 프로세스를 표준화하고 소요 기간을 추적하세요. 이 구간 이탈 고객을 별도 태깅해 재접촉 우선순위를 부여하세요.',
+      chartTitle:'고객 여정 퍼널', chartSrc:'customers × consultations × contracts', chartHtml:funnelChart});
+
+  // ================= key findings (summary page) =================
+  var findings = [
+    {stat:'32.5%', color:'var(--accent)', dot:'dot-indigo', txt:'고객 600명 중 195명만 계약을 완료 — 전체 전환율 32.5%', tag:'퍼널', page:'sales'},
+    {stat:'9.9배', color:'var(--s4)', dot:'dot-amber', txt:'실제 계약서 원본 대조 결과, contracts.csv 가격 필드가 손상됐음을 문서로 확인', tag:'문서대조', page:'inventory'},
+    {stat:'14.2%', color:'var(--s3)', dot:'dot-teal', txt:'관심 평형과 실제 계약 평형이 일치하는 비율은 10명 중 1명 수준', tag:'매물', page:'inventory'},
+    {stat:'37.9% vs 27.8%', color:'var(--s1)', dot:'dot-blue', txt:'유입경로별 전환율 최대 10.1%p 격차 — 광고(네이버) 최고, 방문 최저', tag:'채널', page:'channel'},
+    {stat:'25.0%', color:'var(--s1)', dot:'dot-blue', txt:'온라인 상담 "계약희망"의 실제 계약 실현율이 전 채널 중 최저', tag:'채널', page:'channel'},
+    {stat:'10.3 : 1', color:'var(--s3)', dot:'dot-teal', txt:'102A 타입, 관심고객 대비 미계약 재고가 가장 타이트 — 조기 소진 위험', tag:'매물', page:'inventory'},
+    {stat:'525.7억', color:'var(--s7)', dot:'dot-violet', txt:'고예산 휴면 고객 54명의 잠재 예산이 방치된 상태', tag:'고객', page:'segment'},
+    {stat:'62.5%', color:'var(--s4)', dot:'dot-amber', txt:'완료 계약의 대출비율(LTV)이 75~85%에 집중 — 금리 리스크 노출', tag:'영업', page:'sales'}
+  ];
+  document.getElementById('findings-list').innerHTML = findings.map(function(f){
+    return '<div class="finding-row" data-goto="'+f.page+'">' +
+      '<div class="fdot" style="background:'+f.color+'"></div>' +
+      '<div class="fstat" style="color:'+f.color+'">'+f.stat+'</div>' +
+      '<div class="ftxt">'+f.txt+'</div>' +
+      '<div class="ftag">'+f.tag+' →</div>' +
+    '</div>';
+  }).join('');
+  document.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var id = el.getAttribute('data-goto');
+      history.replaceState(null,'','#'+id);
+      setPage(id);
+    });
+  });
+
+  // ---------------- init ----------------
+  setPage((location.hash || '#summary').slice(1));
+})();
+</script>
+
+</body>
+</html>
